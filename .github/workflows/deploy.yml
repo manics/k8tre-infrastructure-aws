@@ -1,0 +1,59 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - this-is-an-example-github-workflow-file-to-run-terraform
+      # - main
+  workflow_dispatch:
+
+# Don't allow multiple deploys for the same branch
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency: ci-${{ github.ref }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    # These permissions are needed to interact with GitHub's OIDC Token endpoint.
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AWS_ACCOUNT_ID: "000000000000"
+      AWS_REGION: eu-west-2
+      GITHUB_OIDC_ROLE: k8tre-dev-github-oidc
+      # TERRAFORM_DEPLOY_COMMAND: plan
+      TERRAFORM_DEPLOY_COMMAND: "apply -auto-approve"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.1"
+
+      - name: Configure AWS credentials from prod account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_OIDC_ROLE }}"
+          aws-region: eu-west-2
+
+      # - name: Set AWS region
+      #   run: |
+      #     echo AWS_REGION=${{ env.AWS_REGION }} >> $GITHUB_ENV
+
+      - name: Initialise Terraform
+        run: |
+          terraform init
+          terraform validate
+
+      - name: Deploy
+        run: |
+          if [ "${{ github.ref }}" == main ]; then
+            terraform $TERRAFORM_DEPLOY_COMMAND
+          else
+            terraform plan
+          fi

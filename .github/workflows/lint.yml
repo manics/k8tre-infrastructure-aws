@@ -1,0 +1,23 @@
+name: Lint
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.12.1"
+
+      - name: Lint Terraform
+        run: |
+          terraform init -backend=false
+          terraform validate
+          terraform fmt -recursive -check

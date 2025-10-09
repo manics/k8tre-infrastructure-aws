@@ -1,0 +1,20 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.14"
+    }
+
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.38"
+    }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.1"
+    }
+  }
+
+  required_version = ">= 1.10.0"
+}
