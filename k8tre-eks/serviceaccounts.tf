@@ -32,3 +32,20 @@ module "aws_efs_csi_pod_identity" {
   name                      = "aws-efs-csi"
   attach_aws_efs_csi_policy = true
 }
+
+module "cluster_autoscaler_pod_identity" {
+  source                           = "terraform-aws-modules/eks-pod-identity/aws"
+  version                          = "2.0.0"
+  name                             = "cluster-autoscaler"
+  attach_cluster_autoscaler_policy = true
+  cluster_autoscaler_cluster_names = [var.cluster_name]
+}
+
+# Associate identity with the ServiceAccount that will be created by the
+# cluster-autoscaler Helm chart
+resource "aws_eks_pod_identity_association" "cluster-autoscaler" {
+  cluster_name    = var.cluster_name
+  namespace       = "kube-system"
+  service_account = "cluster-autoscaler-sa"
+  role_arn        = module.cluster_autoscaler_pod_identity.iam_role_arn
+}

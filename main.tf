@@ -57,6 +57,12 @@ module "k8tre-eks" {
   wg1_size         = 2
   wg1_max_size     = 2
 
+  # For available addons see
+  # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html
+  # additional_eks_addons = {}
+
+  # autoupdate_ami = false
+
   github_oidc_rolename = "k8tre-dev-github-oidc"
 }
 

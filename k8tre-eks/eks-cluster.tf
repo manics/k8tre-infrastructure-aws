@@ -40,29 +40,32 @@ module "eks" {
   enable_irsa = true
 
   # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html
-  addons = {
-    coredns = {}
-    eks-pod-identity-agent = {
-      before_compute = true
-    }
-    kube-proxy = {}
-    vpc-cni = {
-      before_compute = true
-    }
+  addons = merge(
+    {
+      coredns = {}
+      eks-pod-identity-agent = {
+        before_compute = true
+      }
+      kube-proxy = {}
+      vpc-cni = {
+        before_compute = true
+      }
 
-    aws-ebs-csi-driver = {
-      pod_identity_association = [{
-        role_arn        = module.aws_ebs_csi_pod_identity.iam_role_arn
-        service_account = "ebs-csi-controller-sa"
-      }]
-    }
-    aws-efs-csi-driver = {
-      pod_identity_association = [{
-        role_arn        = module.aws_efs_csi_pod_identity.iam_role_arn
-        service_account = "efs-csi-controller-sa"
-      }]
-    }
-  }
+      aws-ebs-csi-driver = {
+        pod_identity_association = [{
+          role_arn        = module.aws_ebs_csi_pod_identity.iam_role_arn
+          service_account = "ebs-csi-controller-sa"
+        }]
+      }
+      aws-efs-csi-driver = {
+        pod_identity_association = [{
+          role_arn        = module.aws_efs_csi_pod_identity.iam_role_arn
+          service_account = "efs-csi-controller-sa"
+        }]
+      }
+    },
+    var.additional_eks_addons
+  )
 
   # # Send control plane logs to CloudWatch (is this the default anyway?)
   # # https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
@@ -81,6 +84,8 @@ module "eks" {
       name           = "${var.cluster_name}-wg1"
       instance_types = [var.instance_type_wg1]
       ami_type       = var.use_bottlerocket ? "BOTTLEROCKET_x86_64" : "AL2023_x86_64_STANDARD"
+
+      use_latest_ami_release_version = var.autoupdate_ami
 
       # additional_userdata = "echo foo bar"
       vpc_security_group_ids = [

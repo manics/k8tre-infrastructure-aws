@@ -88,6 +88,18 @@ variable "wg1_max_size" {
   description = "Worker-group-1 maximum number of nodes"
 }
 
+variable "autoupdate_ami" {
+  type        = bool
+  default     = false
+  description = "Whether to autoupdate the AMI version when Terraform is run"
+}
+
+variable "additional_eks_addons" {
+  type        = map(any)
+  default     = {}
+  description = "Map of additional EKS addons"
+}
+
 variable "github_oidc_rolename" {
   type        = string
   description = "The name of the IAM role that will be created for the GitHub OIDC provider, set to null to disable"
