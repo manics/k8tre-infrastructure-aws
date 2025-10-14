@@ -94,6 +94,12 @@ variable "autoupdate_ami" {
   description = "Whether to autoupdate the AMI version when Terraform is run"
 }
 
+variable "autoupdate_addons" {
+  type        = bool
+  default     = false
+  description = "Whether to autoupdate the versions of EKS addons when Terraform is run"
+}
+
 variable "additional_eks_addons" {
   type        = map(any)
   default     = {}

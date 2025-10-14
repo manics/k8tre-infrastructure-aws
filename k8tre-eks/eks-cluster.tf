@@ -42,22 +42,30 @@ module "eks" {
   # https://docs.aws.amazon.com/eks/latest/userguide/workloads-add-ons-available-eks.html
   addons = merge(
     {
-      coredns = {}
+      coredns = {
+        most_recent = var.autoupdate_addons
+      }
       eks-pod-identity-agent = {
         before_compute = true
+        most_recent    = var.autoupdate_addons
       }
-      kube-proxy = {}
+      kube-proxy = {
+        most_recent = var.autoupdate_addons
+      }
       vpc-cni = {
         before_compute = true
+        most_recent    = var.autoupdate_addons
       }
 
       aws-ebs-csi-driver = {
+        most_recent = var.autoupdate_addons
         pod_identity_association = [{
           role_arn        = module.aws_ebs_csi_pod_identity.iam_role_arn
           service_account = "ebs-csi-controller-sa"
         }]
       }
       aws-efs-csi-driver = {
+        most_recent = var.autoupdate_addons
         pod_identity_association = [{
           role_arn        = module.aws_efs_csi_pod_identity.iam_role_arn
           service_account = "efs-csi-controller-sa"

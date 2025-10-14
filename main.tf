@@ -37,6 +37,10 @@ data "http" "myip" {
   url = "https://checkip.amazonaws.com/"
 }
 
+locals {
+  allow_ips = ["${chomp(data.http.myip.response_body)}/32"]
+}
+
 module "k8tre-eks" {
   source = "./k8tre-eks"
   # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
@@ -46,9 +50,9 @@ module "k8tre-eks" {
   # k8s_version       = "1.33"
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
-  k8s_api_cidrs = ["${chomp(data.http.myip.response_body)}/32"]
+  k8s_api_cidrs = local.allow_ips
   # CIDRs that have access to services running on K8S
-  service_access_cidrs = ["${chomp(data.http.myip.response_body)}/32"]
+  service_access_cidrs = local.allow_ips
 
   # number_azs        = 1
   # instance_type_wg1 = "t3a.2xlarge"
@@ -62,6 +66,7 @@ module "k8tre-eks" {
   # additional_eks_addons = {}
 
   # autoupdate_ami = false
+  autoupdate_addons = true
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
 }
