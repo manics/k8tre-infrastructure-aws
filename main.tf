@@ -71,6 +71,30 @@ module "k8tre-eks" {
   github_oidc_rolename = "k8tre-dev-github-oidc"
 }
 
+module "k8tre-argocd-eks" {
+  source = "./k8tre-eks"
+  # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
+
+  region       = "eu-west-2"
+  cluster_name = "k8tre-dev-argocd"
+  # k8s_version       = "1.33"
+
+  # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
+  k8s_api_cidrs = local.allow_ips
+  # CIDRs that have access to services running on K8S
+  service_access_cidrs = local.allow_ips
+
+  # number_azs        = 1
+  instance_type_wg1 = "t3a.xlarge"
+  # use_bottlerocket  = false
+  # root_volume_size = 100
+  wg1_size     = 1
+  wg1_max_size = 1
+
+  # autoupdate_ami = false
+  # autoupdate_addons = false
+}
+
 # Needed so that Terraform can manage the EKS auth configmap
 provider "kubernetes" {
   host                   = module.k8tre-eks.cluster_endpoint
