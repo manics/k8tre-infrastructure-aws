@@ -7,15 +7,19 @@ module "eks_pod_identity_load_balancer" {
   version                         = "2.0.0"
   name                            = "${var.cluster_name}-aws-lb-controller"
   attach_aws_lb_controller_policy = true
-}
 
-# Associate identity with the ServiceAccount that will be created by the
-# aws-load-balancer-controller Helm chart
-resource "aws_eks_pod_identity_association" "aws-lb-controller" {
-  cluster_name    = var.cluster_name
-  namespace       = "loadbalancer"
-  service_account = "aws-load-balancer-controller"
-  role_arn        = module.eks_pod_identity_load_balancer.iam_role_arn
+  # Associate identity with the ServiceAccount that will be created by the
+  # aws-load-balancer-controller Helm chart
+  association_defaults = {
+    namespace       = "loadbalancer"
+    service_account = "aws-load-balancer-controller"
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
 }
 
 module "aws_ebs_csi_pod_identity" {
@@ -39,13 +43,17 @@ module "cluster_autoscaler_pod_identity" {
   name                             = "cluster-autoscaler"
   attach_cluster_autoscaler_policy = true
   cluster_autoscaler_cluster_names = [var.cluster_name]
-}
 
-# Associate identity with the ServiceAccount that will be created by the
-# cluster-autoscaler Helm chart
-resource "aws_eks_pod_identity_association" "cluster-autoscaler" {
-  cluster_name    = var.cluster_name
-  namespace       = "kube-system"
-  service_account = "cluster-autoscaler-sa"
-  role_arn        = module.cluster_autoscaler_pod_identity.iam_role_arn
+  # Associate identity with the ServiceAccount that will be created by the
+  # cluster-autoscaler Helm chart
+  association_defaults = {
+    namespace       = "kube-system"
+    service_account = "cluster-autoscaler-sa"
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
 }
