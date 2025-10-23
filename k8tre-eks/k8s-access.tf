@@ -89,3 +89,39 @@ resource "aws_iam_role_policy_attachment" "eks_access" {
   role       = aws_iam_role.eks_access.name
   policy_arn = aws_iam_policy.eks_access.arn
 }
+
+# Create a pod identity role that ArgoCD can assume if running outside the cluster
+#
+# TODO: Currently this assumes the ArgoCD EKS is in the same account as the
+# K8TRE cluster. In future we should support cross-account access, which means
+# ArgoCD will need permission to assume a role in a different account.
+#
+# See https://github.com/argoproj/argo-cd/issues/17064#issuecomment-2271623966
+# for details
+
+# https://github.com/terraform-aws-modules/terraform-aws-eks-pod-identity/tree/v2.2.1?tab=readme-ov-file#custom-iam-role
+module "eks_pod_identity_argocd_access" {
+  source  = "terraform-aws-modules/eks-pod-identity/aws"
+  version = "2.0.0"
+  name    = "${var.cluster_name}-argocd-access"
+
+  # attach_custom_policy      = true
+  # source_policy_documents   = [data.aws_iam_policy_document.source.json]
+  # override_policy_documents = [data.aws_iam_policy_document.override.json]
+  additional_policy_arns = {
+    eks_access = aws_iam_policy.eks_access.arn
+  }
+
+  # Associate identity with the ServiceAccount that will be used by ArgoCD
+  # to access this cluster
+  association_defaults = {
+    namespace       = var.argocd_namespace
+    service_account = var.argocd_serviceaccount_name
+  }
+
+  associations = {
+    cluster1 = {
+      cluster_name = var.cluster_name
+    }
+  }
+}

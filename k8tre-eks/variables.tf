@@ -106,6 +106,21 @@ variable "additional_eks_addons" {
   description = "Map of additional EKS addons"
 }
 
+variable "argocd_namespace" {
+  type        = string
+  description = "Namespace of ArgoCD, used to create a pod identity"
+  default     = "argocd"
+}
+
+variable "argocd_serviceaccount_name" {
+  type        = string
+  description = "Name of the ArgoCD serviceaccount, used to create a pod identity"
+  # TODO which is the correct ArgoCD ServiceAccount?
+  # https://argo-cd.readthedocs.io/en/stable/getting_started/
+  # argocd-manager
+  default = "argocd-server"
+}
+
 variable "github_oidc_rolename" {
   type        = string
   description = "The name of the IAM role that will be created for the GitHub OIDC provider, set to null to disable"
