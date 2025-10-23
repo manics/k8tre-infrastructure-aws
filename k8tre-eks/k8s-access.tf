@@ -6,6 +6,8 @@
 # Use in conjunction with a role, and
 # https://github.com/aws-actions/configure-aws-credentials
 resource "aws_iam_openid_connect_provider" "github_oidc" {
+  count = var.github_oidc_rolename == null ? 0 : 1
+
   client_id_list = [
     "sts.amazonaws.com",
   ]
@@ -34,6 +36,8 @@ resource "aws_iam_policy" "eks_access" {
 }
 
 resource "aws_iam_role" "github_oidc" {
+  count = var.github_oidc_rolename == null ? 0 : 1
+
   name = var.github_oidc_rolename
 
   assume_role_policy = jsonencode({
@@ -43,7 +47,7 @@ resource "aws_iam_role" "github_oidc" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = aws_iam_openid_connect_provider.github_oidc.arn
+          Federated = aws_iam_openid_connect_provider.github_oidc[0].arn
         }
         Condition = {
           StringLike = {
@@ -57,7 +61,9 @@ resource "aws_iam_role" "github_oidc" {
 }
 
 resource "aws_iam_role_policy_attachment" "github_oidc" {
-  role       = aws_iam_role.github_oidc.name
+  count = var.github_oidc_rolename == null ? 0 : 1
+
+  role       = aws_iam_role.github_oidc[0].name
   policy_arn = aws_iam_policy.eks_access.arn
 }
 
