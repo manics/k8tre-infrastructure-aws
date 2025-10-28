@@ -112,13 +112,11 @@ variable "argocd_namespace" {
   default     = "argocd"
 }
 
-variable "argocd_serviceaccount_name" {
-  type        = string
-  description = "Name of the ArgoCD serviceaccount, used to create a pod identity"
-  # TODO which is the correct ArgoCD ServiceAccount?
-  # https://argo-cd.readthedocs.io/en/stable/getting_started/
-  # argocd-manager
-  default = "argocd-server"
+variable "argocd_serviceaccount_names" {
+  type        = list(string)
+  description = "Names of the ArgoCD serviceaccount, used to create a pod identity"
+  # https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#argo-cd-management-role
+  default = ["argocd-application-controller", "argocd-applicationset-controller", "argocd-server"]
 }
 
 variable "github_oidc_rolename" {

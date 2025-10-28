@@ -66,7 +66,7 @@ module "k8tre-eks" {
   # additional_eks_addons = {}
 
   # autoupdate_ami = false
-  autoupdate_addons = true
+  # autoupdate_addons = false
 
   github_oidc_rolename = "k8tre-dev-github-oidc"
 }
@@ -95,16 +95,24 @@ module "k8tre-argocd-eks" {
   # autoupdate_addons = false
 }
 
-# Needed so that Terraform can manage the EKS auth configmap
-provider "kubernetes" {
-  host                   = module.k8tre-eks.cluster_endpoint
-  cluster_ca_certificate = module.k8tre-eks.cluster_ca_certificate
-  token                  = module.k8tre-eks.eks_token
+module "apps" {
+  source = "./apps"
+  # Change this to module.k8tre-eks.cluster_name to deploy ArgoCD in the same cluster
+  cluster_name = module.k8tre-argocd-eks.cluster_name
+
+  target_cluster_name = module.k8tre-eks.cluster_name
+  target_role_arn     = module.k8tre-eks.eks_access_role
 }
 
-output "kubeconfig_command" {
-  description = "Create kubeconfig command"
+
+output "kubeconfig_command_k8tre-dev" {
+  description = "Create kubeconfig for k8tre-dev"
   value       = "aws eks update-kubeconfig --name ${module.k8tre-eks.cluster_name}"
+}
+
+output "kubeconfig_command_k8tre-argocd-dev" {
+  description = "Create kubeconfig for k8tre-argocd-dev"
+  value       = "aws eks update-kubeconfig --name ${module.k8tre-argocd-eks.cluster_name}"
 }
 
 output "service_access_prefix_list" {

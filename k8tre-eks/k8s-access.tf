@@ -115,13 +115,17 @@ module "eks_pod_identity_argocd_access" {
   # Associate identity with the ServiceAccount that will be used by ArgoCD
   # to access this cluster
   association_defaults = {
-    namespace       = var.argocd_namespace
-    service_account = var.argocd_serviceaccount_name
+    # namespace       = var.argocd_namespace
+    # service_account = item
+    cluster_name = var.cluster_name
   }
 
   associations = {
-    cluster1 = {
-      cluster_name = var.cluster_name
+    for name in var.argocd_serviceaccount_names :
+    name => {
+      namespace       = var.argocd_namespace
+      service_account = name
     }
+
   }
 }

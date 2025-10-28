@@ -23,8 +23,8 @@ output "cluster_endpoint" {
 }
 
 output "cluster_ca_certificate" {
-  description = "The EKS certificate authority data"
-  value       = base64decode(module.eks.cluster_certificate_authority_data)
+  description = "The EKS certificate authority data in base64"
+  value       = module.eks.cluster_certificate_authority_data
 }
 output "eks_token" {
   description = "The EKS token"
@@ -34,4 +34,9 @@ output "eks_token" {
 output "service_access_cidrs_prefix_list" {
   description = "ID of the prefix list that can access services running on K8s"
   value       = aws_ec2_managed_prefix_list.service-access-cidrs.id
+}
+
+output "eks_access_role" {
+  description = "ARN of a role that can access this EKS cluster"
+  value       = aws_iam_role.eks_access.arn
 }
