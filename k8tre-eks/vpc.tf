@@ -13,13 +13,13 @@ module "vpc" {
   enable_nat_gateway = true
   single_nat_gateway = true
 
-  tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
+  # tags = {
+  #   "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+  # }
 
   # https://repost.aws/knowledge-center/eks-load-balancer-controller-subnets
   public_subnet_tags = {
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    # "kubernetes.io/cluster/${var.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                    = "1"
   }
 
