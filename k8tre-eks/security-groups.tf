@@ -2,7 +2,7 @@
 
 resource "aws_security_group" "worker_group_all" {
   name_prefix = "worker_group_all_ports"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
   description = "Allow all ports for worker group"
 
   ingress {
@@ -25,7 +25,7 @@ resource "aws_security_group" "worker_group_all" {
 
 resource "aws_security_group" "all_worker_mgmt" {
   name_prefix = "all_worker_management"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
   description = "Worker nodes internal access"
 
   ingress {

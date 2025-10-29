@@ -20,13 +20,13 @@ module "eks" {
   version            = "21.3.1"
   name               = var.cluster_name
   kubernetes_version = var.k8s_version
-  subnet_ids         = module.vpc.private_subnets
+  subnet_ids         = var.private_subnets
 
   endpoint_private_access      = true
   endpoint_public_access       = true
   endpoint_public_access_cidrs = var.k8s_api_cidrs
 
-  vpc_id = module.vpc.vpc_id
+  vpc_id = var.vpc_id
 
   # Allow all allowed roles to access the KMS key
   kms_key_enable_default_policy = true
@@ -119,7 +119,7 @@ module "eks" {
         }
       }
 
-      subnet_ids = slice(module.vpc.private_subnets, 0, var.number_azs)
+      subnet_ids = slice(var.private_subnets, 0, var.number_azs)
 
       capacity_type = "ON_DEMAND"
       iam_role_additional_policies = {

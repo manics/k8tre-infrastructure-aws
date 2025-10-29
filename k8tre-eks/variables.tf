@@ -8,22 +8,19 @@ variable "cluster_name" {
   description = "EKS cluster name"
 }
 
-variable "vpc_cidr" {
+variable "vpc_id" {
   type        = string
-  description = "VPC CIDR to create"
-  default     = "10.0.0.0/16"
+  description = "VPC ID"
 }
 
 variable "public_subnets" {
   type        = list(string)
-  description = "Public subnet CIDRs to create"
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+  description = "Public subnet IDs"
 }
 
 variable "private_subnets" {
   type        = list(string)
-  description = "Private subnet CIDRs to create"
-  default     = ["10.0.3.0/24", "10.0.4.0/24"]
+  description = "Private subnet IDs"
 }
 
 variable "k8s_version" {
