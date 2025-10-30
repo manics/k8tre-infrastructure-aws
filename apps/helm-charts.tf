@@ -1,12 +1,5 @@
 
-data "aws_eks_cluster" "target" {
-  name = var.target_cluster_name
-}
-data "aws_eks_cluster_auth" "target_auth" {
-  name = var.target_cluster_name
-}
-
-# https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
+# # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
@@ -15,11 +8,11 @@ resource "helm_release" "argocd" {
   namespace  = "argocd"
 
   values = [
-    templatefile("apps/argocd.yaml", {
-      server       = data.aws_eks_cluster.target.endpoint
-      cluster_name = var.target_cluster_name
-      role_arn     = var.target_role_arn
-      cluster_ca   = data.aws_eks_cluster.target.certificate_authority.0.data
+    templatefile("./argocd.yaml", {
+      deployment_server       = data.aws_eks_cluster.deployment.endpoint
+      deployment_cluster_name = data.aws_eks_cluster.deployment.id
+      deployment_cluster_ca   = data.aws_eks_cluster.deployment.certificate_authority.0.data
+      deployment_role_arn     = data.terraform_remote_state.k8tre.outputs.k8tre_eks_access_role
     })
   ]
 

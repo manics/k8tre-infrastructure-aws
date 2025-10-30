@@ -11,6 +11,7 @@ locals {
     aws_admins = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
     # Optional GitHub OIDC role
     github_oidc = var.github_oidc_rolename == null ? null : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.github_oidc_rolename}"
+    eks_access  = aws_iam_role.eks_access.arn
   }
 }
 
@@ -25,6 +26,8 @@ module "eks" {
   endpoint_private_access      = true
   endpoint_public_access       = true
   endpoint_public_access_cidrs = var.k8s_api_cidrs
+
+  security_group_additional_rules = var.cluster_security_group_additional_rules
 
   vpc_id = var.vpc_id
 
@@ -96,10 +99,11 @@ module "eks" {
       use_latest_ami_release_version = var.autoupdate_ami
 
       # additional_userdata = "echo foo bar"
-      vpc_security_group_ids = [
+      vpc_security_group_ids = concat([
         aws_security_group.all_worker_mgmt.id,
         aws_security_group.worker_group_all.id,
-      ]
+      ], var.additional_security_groups)
+
       desired_size = var.wg1_size
       min_size     = 1
       max_size     = var.wg1_max_size
@@ -137,7 +141,7 @@ module "eks" {
       principal_arn = principal
       policy_associations = {
         admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             type = "cluster"
           }

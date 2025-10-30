@@ -10,12 +10,12 @@ configs:
     kustomize.buildOptions: "--enable-helm --load-restrictor LoadRestrictionsNone"
   # https://argo-cd.readthedocs.io/en/release-3.1/operator-manual/declarative-setup/#clusters
   clusterCredentials:
-    ${cluster_name}:
-      server: "${server}"
+    ${deployment_cluster_name}:
+      server: "${deployment_server}"
       config:
         awsAuthConfig:
-          clusterName: "${cluster_name}"
-          roleARN: "${role_arn}"
+          clusterName: "${deployment_cluster_name}"
+          roleARN: "${deployment_role_arn}"
         tlsClientConfig:
           caData: |
-            ${cluster_ca}
+            ${deployment_cluster_ca}

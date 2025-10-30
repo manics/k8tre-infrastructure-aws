@@ -76,7 +76,9 @@ data "http" "myip" {
 }
 
 locals {
-  allow_ips = ["${chomp(data.http.myip.response_body)}/32"]
+  allow_ips = [
+    "${chomp(data.http.myip.response_body)}/32",
+  ]
 }
 
 
@@ -110,10 +112,35 @@ module "vpc" {
   private_subnet_tags = {}
 }
 
+# Security group that allows clusters to access each other
+resource "aws_security_group" "internal_cluster_access" {
+  name_prefix = "internal_cluster_endpoint"
+  vpc_id      = module.vpc.vpc_id
+  description = "Internal cluster endpoint"
+
+  // allows traffic from the SG itself
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+}
 
 ######################################################################
 # Main K8TRE Kubernetes
 ######################################################################
+
+locals {
+  allow_argocd_k8s_access = {
+    description              = "Allow ArgoCD to access internal K8S endpoint"
+    type                     = "ingress"
+    from_port                = 443
+    to_port                  = 443
+    protocol                 = "tcp"
+    source_security_group_id = aws_security_group.internal_cluster_access.id
+  }
+}
 
 module "k8tre-eks" {
   source = "./k8tre-eks"
@@ -131,6 +158,13 @@ module "k8tre-eks" {
   k8s_api_cidrs = local.allow_ips
   # CIDRs that have access to services running on K8S
   service_access_cidrs = local.allow_ips
+
+  additional_security_groups = [aws_security_group.internal_cluster_access.id]
+
+  # Allow ArgoCD to access K8S API
+  cluster_security_group_additional_rules = {
+    allow_argocd_k8s_access = local.allow_argocd_k8s_access
+  }
 
   # number_azs        = 1
   # instance_type_wg1 = "t3a.2xlarge"
@@ -171,6 +205,8 @@ module "k8tre-argocd-eks" {
   # CIDRs that have access to services running on K8S
   service_access_cidrs = local.allow_ips
 
+  additional_security_groups = [aws_security_group.internal_cluster_access.id]
+
   # number_azs        = 1
   instance_type_wg1 = "t3a.xlarge"
   # use_bottlerocket  = false
@@ -180,6 +216,9 @@ module "k8tre-argocd-eks" {
 
   # autoupdate_ami = false
   # autoupdate_addons = false
+
+  argocd_create_role            = true
+  argocd_assume_eks_access_role = module.k8tre-eks.eks_access_role
 }
 
 
@@ -198,13 +237,17 @@ output "service_access_prefix_list" {
   value       = module.k8tre-eks.service_access_cidrs_prefix_list
 }
 
+output "k8tre_cluster_name" {
+  description = "K8TRE dev cluster name"
+  value       = module.k8tre-eks.cluster_name
+}
 
-# deploy ArgoCD by uncomment this after the ArgoCD EKS cluster is deployed:
-# module "apps" {
-#   source = "./apps"
-#   # Change this to module.k8tre-eks.cluster_name to deploy ArgoCD in the same cluster
-#   cluster_name = module.k8tre-argocd-eks.cluster_name
+output "k8tre_argocd_cluster_name" {
+  description = "K8TRE dev cluster name"
+  value       = module.k8tre-argocd-eks.cluster_name
+}
 
-#   target_cluster_name = module.k8tre-eks.cluster_name
-#   target_role_arn     = module.k8tre-eks.eks_access_role
-# }
+output "k8tre_eks_access_role" {
+  description = "K8TRE EKS deployment role ARN"
+  value       = module.k8tre-eks.eks_access_role
+}

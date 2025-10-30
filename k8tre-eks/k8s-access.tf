@@ -75,7 +75,10 @@ resource "aws_iam_role" "eks_access" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action = "sts:AssumeRole"
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
         Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
@@ -98,18 +101,73 @@ resource "aws_iam_role_policy_attachment" "eks_access" {
 #
 # See https://github.com/argoproj/argo-cd/issues/17064#issuecomment-2271623966
 # for details
+#
+# This requires multiple roles:
+# - A PodIdentity role: The ArgoCD ServiceAccounts can run as this role
+# - ArgoCD deployment role: Role that has permissions to deploy ArgoCD applications,
+#   this role is assumed by the PodIdentity role
+
+
+resource "aws_iam_policy" "argocd_pod_identity" {
+  count = var.argocd_create_role ? 1 : 0
+
+  name        = "${var.cluster_name}-argocd-pod"
+  description = "Kubernetes EKS ArgoCD pod identity"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sts:AssumeRole",
+          "sts:TagSession",
+        ]
+        Effect   = "Allow"
+        Resource = length(var.argocd_assume_eks_access_role) > 0 ? var.argocd_assume_eks_access_role : aws_iam_role.eks_access.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role" "argocd_pod_identity" {
+  count = var.argocd_create_role ? 1 : 0
+
+  name = "${var.cluster_name}-argocd-pod"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = module.eks_pod_identity_argocd_access[count.index].iam_role_arn
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "argocd_pod_identity" {
+  count = var.argocd_create_role ? 1 : 0
+
+  role       = aws_iam_role.argocd_pod_identity[count.index].name
+  policy_arn = aws_iam_policy.argocd_pod_identity[count.index].arn
+}
+
 
 # https://github.com/terraform-aws-modules/terraform-aws-eks-pod-identity/tree/v2.2.1?tab=readme-ov-file#custom-iam-role
 module "eks_pod_identity_argocd_access" {
+  count = var.argocd_create_role ? 1 : 0
+
   source  = "terraform-aws-modules/eks-pod-identity/aws"
   version = "2.0.0"
-  name    = "${var.cluster_name}-argocd-access"
+  name    = "${var.cluster_name}-argocd"
 
   # attach_custom_policy      = true
   # source_policy_documents   = [data.aws_iam_policy_document.source.json]
   # override_policy_documents = [data.aws_iam_policy_document.override.json]
   additional_policy_arns = {
-    eks_access = aws_iam_policy.eks_access.arn
+    eks_access = aws_iam_policy.argocd_pod_identity[count.index].arn
   }
 
   # Associate identity with the ServiceAccount that will be used by ArgoCD

@@ -41,6 +41,19 @@ variable "service_access_cidrs" {
   description = "CIDRs that have access to services running on K8s"
 }
 
+variable "additional_security_groups" {
+  type        = list(string)
+  default     = []
+  description = "Additional security groups to add to nodes"
+}
+
+# https://github.com/terraform-aws-modules/terraform-aws-eks/blob/v21.8.0/docs/network_connectivity.md
+variable "cluster_security_group_additional_rules" {
+  type        = map(any)
+  default     = {}
+  description = "Additional rules to add to the cluster security group which controls access to the control plane"
+}
+
 variable "number_azs" {
   type = number
   # Use just one so we don't have to deal with node/volume affinity-
@@ -103,10 +116,22 @@ variable "additional_eks_addons" {
   description = "Map of additional EKS addons"
 }
 
+variable "argocd_create_role" {
+  type        = bool
+  description = "Whether to create an ArgoCD pod identity and roles"
+  default     = false
+}
+
 variable "argocd_namespace" {
   type        = string
   description = "Namespace of ArgoCD, used to create a pod identity"
   default     = "argocd"
+}
+
+variable "argocd_assume_eks_access_role" {
+  type        = string
+  description = "IAM role ARN that ArgoCD should assume to access the target cluster, default is eks-access role in this cluster"
+  default     = ""
 }
 
 variable "argocd_serviceaccount_names" {
