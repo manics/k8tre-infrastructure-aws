@@ -11,6 +11,7 @@ locals {
     aws_admins = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
     # Optional GitHub OIDC role
     github_oidc = var.github_oidc_rolename == null ? null : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.github_oidc_rolename}"
+    eks_access  = aws_iam_role.eks_access.arn
   }
 }
 
@@ -20,13 +21,15 @@ module "eks" {
   version            = "21.3.1"
   name               = var.cluster_name
   kubernetes_version = var.k8s_version
-  subnet_ids         = module.vpc.private_subnets
+  subnet_ids         = var.private_subnets
 
   endpoint_private_access      = true
   endpoint_public_access       = true
   endpoint_public_access_cidrs = var.k8s_api_cidrs
 
-  vpc_id = module.vpc.vpc_id
+  security_group_additional_rules = var.cluster_security_group_additional_rules
+
+  vpc_id = var.vpc_id
 
   # Allow all allowed roles to access the KMS key
   kms_key_enable_default_policy = true
@@ -96,10 +99,11 @@ module "eks" {
       use_latest_ami_release_version = var.autoupdate_ami
 
       # additional_userdata = "echo foo bar"
-      vpc_security_group_ids = [
+      vpc_security_group_ids = concat([
         aws_security_group.all_worker_mgmt.id,
         aws_security_group.worker_group_all.id,
-      ]
+      ], var.additional_security_groups)
+
       desired_size = var.wg1_size
       min_size     = 1
       max_size     = var.wg1_max_size
@@ -119,7 +123,7 @@ module "eks" {
         }
       }
 
-      subnet_ids = slice(module.vpc.private_subnets, 0, var.number_azs)
+      subnet_ids = slice(var.private_subnets, 0, var.number_azs)
 
       capacity_type = "ON_DEMAND"
       iam_role_additional_policies = {
@@ -137,7 +141,7 @@ module "eks" {
       principal_arn = principal
       policy_associations = {
         admin = {
-          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             type = "cluster"
           }

@@ -8,22 +8,19 @@ variable "cluster_name" {
   description = "EKS cluster name"
 }
 
-variable "vpc_cidr" {
+variable "vpc_id" {
   type        = string
-  description = "VPC CIDR to create"
-  default     = "10.0.0.0/16"
+  description = "VPC ID"
 }
 
 variable "public_subnets" {
   type        = list(string)
-  description = "Public subnet CIDRs to create"
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+  description = "Public subnet IDs"
 }
 
 variable "private_subnets" {
   type        = list(string)
-  description = "Private subnet CIDRs to create"
-  default     = ["10.0.3.0/24", "10.0.4.0/24"]
+  description = "Private subnet IDs"
 }
 
 variable "k8s_version" {
@@ -42,6 +39,19 @@ variable "service_access_cidrs" {
   type        = list(string)
   default     = ["127.0.0.1/8"]
   description = "CIDRs that have access to services running on K8s"
+}
+
+variable "additional_security_groups" {
+  type        = list(string)
+  default     = []
+  description = "Additional security groups to add to nodes"
+}
+
+# https://github.com/terraform-aws-modules/terraform-aws-eks/blob/v21.8.0/docs/network_connectivity.md
+variable "cluster_security_group_additional_rules" {
+  type        = map(any)
+  default     = {}
+  description = "Additional rules to add to the cluster security group which controls access to the control plane"
 }
 
 variable "number_azs" {
@@ -104,6 +114,31 @@ variable "additional_eks_addons" {
   type        = map(any)
   default     = {}
   description = "Map of additional EKS addons"
+}
+
+variable "argocd_create_role" {
+  type        = bool
+  description = "Whether to create an ArgoCD pod identity and roles"
+  default     = false
+}
+
+variable "argocd_namespace" {
+  type        = string
+  description = "Namespace of ArgoCD, used to create a pod identity"
+  default     = "argocd"
+}
+
+variable "argocd_assume_eks_access_role" {
+  type        = string
+  description = "IAM role ARN that ArgoCD should assume to access the target cluster, default is eks-access role in this cluster"
+  default     = ""
+}
+
+variable "argocd_serviceaccount_names" {
+  type        = list(string)
+  description = "Names of the ArgoCD serviceaccount, used to create a pod identity"
+  # https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#argo-cd-management-role
+  default = ["argocd-application-controller", "argocd-applicationset-controller", "argocd-server"]
 }
 
 variable "github_oidc_rolename" {
