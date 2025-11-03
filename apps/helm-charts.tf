@@ -17,10 +17,14 @@ resource "helm_release" "argocd" {
   ]
 
   depends_on = [kubernetes_namespace.argocd]
+
+  provider = helm.k8tre-dev-argocd
 }
 
 resource "kubernetes_namespace" "argocd" {
   metadata {
     name = "argocd"
   }
+
+  provider = kubernetes.k8tre-dev-argocd
 }

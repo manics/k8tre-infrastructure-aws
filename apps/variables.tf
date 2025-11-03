@@ -10,6 +10,14 @@ data "terraform_remote_state" "k8tre" {
   }
 }
 
+# Cluster where K8TRE wil be deployed
+data "aws_eks_cluster" "k8tre" {
+  name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
+}
+data "aws_eks_cluster_auth" "k8tre" {
+  name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
+}
+
 # Cluster where ArgoCD is deployed
 data "aws_eks_cluster" "argocd" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_argocd_cluster_name
