@@ -6,12 +6,15 @@
 data "aws_caller_identity" "current" {}
 
 locals {
+  aws_account_id = data.aws_caller_identity.current.account_id
   admin_principals = {
     # Anyone in the AWS account with sufficient permissions can access the cluster
-    aws_admins = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+    aws_admins = "arn:aws:iam::${local.aws_account_id}:root"
     # Optional GitHub OIDC role
-    github_oidc = var.github_oidc_rolename == null ? null : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.github_oidc_rolename}"
-    eks_access  = aws_iam_role.eks_access.arn
+    github_oidc = var.github_oidc_rolename == null ? null : "arn:aws:iam::${local.aws_account_id}:role/${var.github_oidc_rolename}"
+    # ARN can't be resolved until after the role is created
+    # eks_access = aws_iam_role.eks_access.arn
+    eks_access = "arn:aws:iam::${local.aws_account_id}:role/${var.cluster_name}-eks-access"
   }
 }
 
@@ -36,7 +39,7 @@ module "eks" {
   # This duplicates the above, but the default is the current user/role so this will avoid
   # a deployment change when run by different users/roles
   kms_key_administrators = [
-    "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+    "arn:aws:iam::${local.aws_account_id}:root",
   ]
 
   # TODO Is this needed?
