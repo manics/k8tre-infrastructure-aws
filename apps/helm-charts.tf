@@ -28,3 +28,31 @@ resource "kubernetes_namespace" "argocd" {
 
   provider = kubernetes.k8tre-dev-argocd
 }
+
+# Add k8tre-dev cluster to ArgoCD
+# https://argo-cd.readthedocs.io/en/release-3.1/operator-manual/declarative-setup/#eks
+resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
+  metadata {
+    name      = "argocd-cluster-${data.aws_eks_cluster.deployment.id}"
+    namespace = "argocd"
+    labels = merge(
+      { "argocd.argoproj.io/secret-type" = "cluster" },
+      var.k8tre_cluster_labels
+    )
+  }
+  data = {
+    config = jsonencode({
+      awsAuthConfig = {
+        clusterName = data.aws_eks_cluster.deployment.id
+        roleARN     = data.terraform_remote_state.k8tre.outputs.k8tre_eks_access_role
+      }
+      tlsClientConfig = {
+        caData = data.aws_eks_cluster.deployment.certificate_authority.0.data
+      }
+    })
+    name   = data.aws_eks_cluster.deployment.id
+    server = data.aws_eks_cluster.deployment.endpoint
+  }
+
+  provider = kubernetes.k8tre-dev-argocd
+}

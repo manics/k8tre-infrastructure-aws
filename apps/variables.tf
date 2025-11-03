@@ -10,6 +10,17 @@ data "terraform_remote_state" "k8tre" {
   }
 }
 
+variable "k8tre_cluster_labels" {
+  type = map(string)
+  default = {
+    environment  = "dev"
+    secret-store = "kubernetes"
+    vendor       = "aws"
+    skip-metallb = "true"
+  }
+  description = "Argocd labels applied to K8TRE cluster"
+}
+
 # Cluster where K8TRE wil be deployed
 data "aws_eks_cluster" "k8tre" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
