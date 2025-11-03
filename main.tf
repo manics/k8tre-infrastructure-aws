@@ -152,7 +152,7 @@ module "k8tre-eks" {
   public_subnets  = slice(module.vpc.public_subnets, 0, 2)
   private_subnets = slice(module.vpc.private_subnets, 0, 2)
 
-  # k8s_version       = "1.33"
+  # k8s_version =
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
@@ -198,7 +198,7 @@ module "k8tre-argocd-eks" {
   public_subnets  = slice(module.vpc.public_subnets, 2, 4)
   private_subnets = slice(module.vpc.private_subnets, 2, 4)
 
-  # k8s_version       = "1.33"
+  # k8s_version =
 
   # CIDRs that have access to the K8S API, e.g. `0.0.0.0/0`
   k8s_api_cidrs = local.allow_ips
