@@ -1,5 +1,5 @@
 
-# # https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
+# https://github.com/argoproj/argo-helm/tree/argo-cd-9.0.5/charts/argo-cd
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
@@ -7,13 +7,20 @@ resource "helm_release" "argocd" {
   version    = "9.0.5"
   namespace  = "argocd"
 
-  values = [
-    templatefile("./argocd.yaml", {
-      deployment_server       = data.aws_eks_cluster.deployment.endpoint
-      deployment_cluster_name = data.aws_eks_cluster.deployment.id
-      deployment_cluster_ca   = data.aws_eks_cluster.deployment.certificate_authority.0.data
-      deployment_role_arn     = data.terraform_remote_state.k8tre.outputs.k8tre_eks_access_role
-    })
+  set = [
+    {
+      name  = "global.logging.level"
+      value = "debug"
+    },
+    {
+      name  = "configs.params.server.insecure"
+      value = "true"
+    },
+    # https://github.com/argoproj/argo-helm/issues/1817
+    {
+      name  = "configs.cm.kustomize\\.buildOptions"
+      value = "--enable-helm --load-restrictor LoadRestrictionsNone"
+    },
   ]
 
   depends_on = [kubernetes_namespace.argocd]
@@ -53,6 +60,26 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
     name   = data.aws_eks_cluster.deployment.id
     server = data.aws_eks_cluster.deployment.endpoint
   }
+
+  provider = kubernetes.k8tre-dev-argocd
+}
+
+# https://github.com/k8tre/k8tre/blob/75e550350427d38b637dffbe6f55124ed323ba70/app_of_apps/root-app-of-apps.yaml
+resource "kubernetes_manifest" "argocd-root-app-of-apps" {
+  count = var.install_k8tre ? 1 : 0
+
+  manifest = yamldecode(
+    replace(
+      replace(
+        file("root-app-of-apps.yaml"),
+        "main", var.k8tre_github_ref
+      ),
+      "k8tre/k8tre", var.k8tre_github_repo
+    )
+  )
+
+  # This is a CRD, so ArgoCD must be deployed first
+  depends_on = [helm_release.argocd]
 
   provider = kubernetes.k8tre-dev-argocd
 }

@@ -30,6 +30,16 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.k8tre.token
 }
 
+provider "helm" {
+  alias = "k8tre-dev"
+  kubernetes = {
+    host                   = data.aws_eks_cluster.k8tre.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.k8tre.certificate_authority.0.data)
+    token                  = data.aws_eks_cluster_auth.k8tre.token
+  }
+}
+
+
 provider "kubernetes" {
   alias                  = "k8tre-dev-argocd"
   host                   = data.aws_eks_cluster.argocd.endpoint
