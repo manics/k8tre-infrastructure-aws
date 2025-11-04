@@ -47,41 +47,22 @@ terraform apply
 ```
 again.
 
-### Install ArgoCD
+### Kubernetes access
+
+`terraform apply` should display the command to create a [kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for the `k8tre-dev` and `k8tre-dev-argocd` clusters.
+
+
+### Install K8TRE prerequisites and ArgoCD
+
+The `apps` directory will install some Kubernetes prerequisites for K8TRE, as well as setting up ArgoCD.
+If you prefer you can set everything up manually following the [K8TRE documentation](https://github.com/k8tre/k8tre/blob/main/docs/development/k3s-dev.md#setup-argocd).
 
 Edit [`apps/variables.tf`](apps/variables.tf):
 - Modify `terraform.backend.s3` `bucket` to match the one in `bootstrap/backend.tf`.
 - Change the `data.terraform_remote_state.k8tre` section to match the `backend.s3` section in `main.tf`.
   This allows the ArgoCD terraform to automatically lookup up the EKS details without needing to specify everything manually.
-
-## `k8tre-dev` cluster setup
-
-`terraform apply` should display the command to create `kubeconfig` file for the `k8tre-dev` cluster.
-Create and activate it.
-
-### Deploy a default storage class using EBS
-
-```sh
-kubectl apply -f manifests/default-storageclass.yaml
-```
-
-### Setup Cillium
-https://docs.cilium.io/en/latest/installation/cni-chaining-aws-cni/
-
-```sh
-helm repo add cilium https://helm.cilium.io/
-helm upgrade --install cilium cilium/cilium --version 1.18.2 \
-  --namespace kube-system \
-  --set cni.chainingMode=aws-cni \
-  --set cni.exclusive=false \
-  --set enableIPv4Masquerade=false \
-  --set routingMode=native \
-  --wait
-```
-
-Now follow the remaining steps in
-https://github.com/k8tre/k8tre/blob/main/docs/development/k3s-dev.md#setup-argocd
-to setup ArgoCD.
+- By default this will also install the K8TRE ArgoCD root-app-of-apps.
+  Set `install_k8tre = false` to disable this.
 
 ## Things to note
 
