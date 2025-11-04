@@ -10,6 +10,35 @@ data "terraform_remote_state" "k8tre" {
   }
 }
 
+variable "k8tre_cluster_labels" {
+  type = map(string)
+  default = {
+    environment  = "dev"
+    secret-store = "kubernetes"
+    vendor       = "aws"
+    skip-metallb = "true"
+  }
+  description = "Argocd labels applied to K8TRE cluster"
+}
+
+variable "install_k8tre" {
+  type        = bool
+  default     = true
+  description = "Install K8TRE root app-of-apps"
+}
+
+variable "k8tre_github_repo" {
+  type        = string
+  default     = "k8tre/k8tre"
+  description = "K8TRE GitHub organisation and repository to install"
+}
+
+variable "k8tre_github_ref" {
+  type        = string
+  default     = "main"
+  description = "K8TRE git ref (commit/branch/tag)"
+}
+
 # Cluster where K8TRE wil be deployed
 data "aws_eks_cluster" "k8tre" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
