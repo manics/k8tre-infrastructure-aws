@@ -19,6 +19,7 @@ cd ..
 ## Deploy Amazon Elastic Kubernetes Service (EKS)
 
 By default this 3will deploy two EKS clusters:
+
 - `k8tre-dev-argocd` is where ArgoCD will run
 - `k8tre-dev` is where K8TRE will be deployed
 
@@ -30,6 +31,7 @@ Edit [`main.tf`](main.tf).
 You must modify `terraform.backend.s3` `bucket` to match the one in `bootstrap/backend.tf`, and you may want to modify the configuration of `module.k8tre-eks`.
 
 If you want to deploy ArgoCD in the same cluster as K8TRE delete
+
 - `module.k8tre-argocd-eks`
 - `output.kubeconfig_command_k8tre-argocd-dev`
 
@@ -41,16 +43,18 @@ Activate your AWS credentials in your shell environment, then:
 terraform init
 terraform apply
 ```
+
 If there's a timeout run
+
 ```sh
 terraform apply
 ```
+
 again.
 
 ### Kubernetes access
 
 `terraform apply` should display the command to create a [kubeconfig file](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) for the `k8tre-dev` and `k8tre-dev-argocd` clusters.
-
 
 ### Install K8TRE prerequisites and ArgoCD
 
@@ -58,6 +62,7 @@ The `apps` directory will install some Kubernetes prerequisites for K8TRE, as we
 If you prefer you can set everything up manually following the [K8TRE documentation](https://github.com/k8tre/k8tre/blob/main/docs/development/k3s-dev.md#setup-argocd).
 
 Edit [`apps/variables.tf`](apps/variables.tf):
+
 - Modify `terraform.backend.s3` `bucket` to match the one in `bootstrap/backend.tf`.
 - Change the `data.terraform_remote_state.k8tre` section to match the `backend.s3` section in `main.tf`.
   This allows the ArgoCD terraform to automatically lookup up the EKS details without needing to specify everything manually.
@@ -80,9 +85,6 @@ This is not used in any Terraform resource, but can be referenced in Application
 To simplify certificate management in K8TRE you can optionally create a wildcard public certificate using [Amazon Certificate Manager](https://docs.aws.amazon.com/acm/latest/userguide/acm-public-certificates.html).
 This certificate can then be used in AWS load balancers provisioned by K8TRE without further configuration.
 
-
-
-
 ## Developer notes
 
 To debug Argocd inter-cluster auth:
@@ -91,4 +93,15 @@ To debug Argocd inter-cluster auth:
 kubectl -nargocd exec -it deploy/argocd-server -- bash
 
 argocd-k8s-auth aws --cluster-name k8tre-dev --role-arn arn:aws:iam::${ACCOUNT_ID}:role/k8tre-dev-eks-access
+```
+
+### Linting
+
+When making changes to this repository run:
+
+```sh
+terraform validate
+terraform fmt -recursive
+tflint --recursive
+npx prettier@3.6.2 --write '**/*.{yaml,yml,md}'
 ```
