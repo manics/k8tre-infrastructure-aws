@@ -1,5 +1,10 @@
 terraform {
   required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.14"
+    }
+
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "~> 2.38"
@@ -25,17 +30,17 @@ terraform {
 
 provider "kubernetes" {
   alias                  = "k8tre-dev"
-  host                   = data.aws_eks_cluster.k8tre.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.k8tre.certificate_authority.0.data)
-  token                  = data.aws_eks_cluster_auth.k8tre.token
+  host                   = data.aws_eks_cluster.deployment.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.deployment.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.deployment.token
 }
 
 provider "helm" {
   alias = "k8tre-dev"
   kubernetes = {
-    host                   = data.aws_eks_cluster.k8tre.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.k8tre.certificate_authority.0.data)
-    token                  = data.aws_eks_cluster_auth.k8tre.token
+    host                   = data.aws_eks_cluster.deployment.endpoint
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.deployment.certificate_authority[0].data)
+    token                  = data.aws_eks_cluster_auth.deployment.token
   }
 }
 
@@ -43,7 +48,7 @@ provider "helm" {
 provider "kubernetes" {
   alias                  = "k8tre-dev-argocd"
   host                   = data.aws_eks_cluster.argocd.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.argocd.certificate_authority.0.data)
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.argocd.certificate_authority[0].data)
   token                  = data.aws_eks_cluster_auth.argocd.token
 }
 
@@ -51,7 +56,7 @@ provider "helm" {
   alias = "k8tre-dev-argocd"
   kubernetes = {
     host                   = data.aws_eks_cluster.argocd.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.argocd.certificate_authority.0.data)
+    cluster_ca_certificate = base64decode(data.aws_eks_cluster.argocd.certificate_authority[0].data)
     token                  = data.aws_eks_cluster_auth.argocd.token
   }
 }

@@ -54,7 +54,7 @@ resource "kubernetes_secret" "argocd-cluster-k8tre-dev" {
         roleARN     = data.terraform_remote_state.k8tre.outputs.k8tre_eks_access_role
       }
       tlsClientConfig = {
-        caData = data.aws_eks_cluster.deployment.certificate_authority.0.data
+        caData = data.aws_eks_cluster.deployment.certificate_authority[0].data
       }
     })
     name   = data.aws_eks_cluster.deployment.id
