@@ -47,6 +47,11 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.21"
     }
+
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.5"
+    }
   }
 
   required_version = ">= 1.10.0"
@@ -146,10 +151,8 @@ module "k8tre-eks" {
   source = "./k8tre-eks"
   # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
 
-  region          = "eu-west-2"
   cluster_name    = "k8tre-dev"
   vpc_id          = module.vpc.vpc_id
-  public_subnets  = slice(module.vpc.public_subnets, 0, 2)
   private_subnets = slice(module.vpc.private_subnets, 0, 2)
 
   # k8s_version =
@@ -192,10 +195,8 @@ module "k8tre-argocd-eks" {
   source = "./k8tre-eks"
   # source = "git::https://github.com/k8tre/k8tre-infrastructure-aws.git?ref=main"
 
-  region          = "eu-west-2"
   cluster_name    = "k8tre-dev-argocd"
   vpc_id          = module.vpc.vpc_id
-  public_subnets  = slice(module.vpc.public_subnets, 2, 4)
   private_subnets = slice(module.vpc.private_subnets, 2, 4)
 
   # k8s_version =

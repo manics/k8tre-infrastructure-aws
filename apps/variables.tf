@@ -40,10 +40,10 @@ variable "k8tre_github_ref" {
 }
 
 # Cluster where K8TRE wil be deployed
-data "aws_eks_cluster" "k8tre" {
+data "aws_eks_cluster" "deployment" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
 }
-data "aws_eks_cluster_auth" "k8tre" {
+data "aws_eks_cluster_auth" "deployment" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
 }
 
@@ -53,13 +53,4 @@ data "aws_eks_cluster" "argocd" {
 }
 data "aws_eks_cluster_auth" "argocd" {
   name = data.terraform_remote_state.k8tre.outputs.k8tre_argocd_cluster_name
-}
-
-
-# Cluster where K8TRE is deployed by ArgoCD
-data "aws_eks_cluster" "deployment" {
-  name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
-}
-data "aws_eks_cluster_auth" "deployment" {
-  name = data.terraform_remote_state.k8tre.outputs.k8tre_cluster_name
 }

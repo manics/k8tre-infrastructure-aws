@@ -16,8 +16,23 @@ jobs:
         with:
           terraform_version: "1.12.1"
 
-      - name: Lint Terraform
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+        with:
+          # https://github.com/terraform-linters/tflint/tags
+          tflint_version: v0.59.1
+          cache: true
+
+      - name: Validate Terraform
         run: |
           terraform init -backend=false
           terraform validate
+
+      - name: Format Terraform
+        run: |
           terraform fmt -recursive -check
+
+      - name: Lint Terraform
+        run: |
+          tflint --init
+          tflint --recursive

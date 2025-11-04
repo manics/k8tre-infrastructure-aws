@@ -1,7 +1,3 @@
-variable "region" {
-  type        = string
-  description = "AWS region"
-}
 
 variable "cluster_name" {
   type        = string
@@ -11,11 +7,6 @@ variable "cluster_name" {
 variable "vpc_id" {
   type        = string
   description = "VPC ID"
-}
-
-variable "public_subnets" {
-  type        = list(string)
-  description = "Public subnet IDs"
 }
 
 variable "private_subnets" {
